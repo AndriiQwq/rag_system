@@ -1,0 +1,16 @@
+transformers
+kaggle 
+pandas 
+chromadb
+tqdm 
+sentence-transformers 
+datasets 
+jupyter
+python-dotenv 
+google-generativeai 
+groq
+
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
