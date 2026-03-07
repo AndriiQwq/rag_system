@@ -24,7 +24,10 @@ class GPT2Generator(Generator):
             outputs = self.model.generate(
                 **inputs,
                 max_new_tokens=max_tokens,
-                do_sample=False,
+                do_sample=True, # Enable sampling for more diverse outputs
+                temperature=0.7, # Adjust for creativity
+                top_p=0.9, # Selecting from top x% of probability mass
+                repetition_penalty=1.2, # Penalize repetition
                 pad_token_id=self.tokenizer.eos_token_id
             )
         
