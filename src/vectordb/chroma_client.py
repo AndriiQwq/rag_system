@@ -4,11 +4,11 @@ from typing import List, Dict, Any
 
 
 class ChromaIndexer:
-    def __init__(self, chroma_path: str, collection_name: str):
+    def __init__(self, chroma_path: str, collection_name: str, embedding_model: str = "BAAI/bge-large-en-v1.5"):
         self.client = chromadb.PersistentClient(path=chroma_path)
         self.collection_name = collection_name
         self.collection = None
-        self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        self.embedder = SentenceTransformer(embedding_model)
 
     def create_collection(self, recreate: bool = True):
         if recreate:

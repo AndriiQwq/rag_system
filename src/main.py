@@ -1,33 +1,33 @@
 import argparse
 import time
 
-from .data.loader import load_wikipedia_simple
-from .data.preprocessor import simple_chunk, clean_text
 from .config.settings import settings
-from .vectordb.chroma_client import ChromaIndexer
-from .rag.pipeline import RAGPipeline
-from .models.local.gpt2 import GPT2Generator
-from .models.api.gemini import GeminiGenerator
-from .models.api.groq import GroqGenerator
 
 
 def get_generator(generator_type: str):
-    """Factory function to create the appropriate generator."""
+    """Factory function to create the appropriate generator. Lazy import to avoid loading models at startup."""
     if generator_type == "gpt2":
+        from .models.local.gpt2 import GPT2Generator
         return GPT2Generator()
     elif generator_type == "gemini":
+        from .models.api.gemini import GeminiGenerator
         return GeminiGenerator()
     elif generator_type == "groq":
+        from .models.api.groq import GroqGenerator
         return GroqGenerator()
     else:
         raise ValueError(f"Unknown generator type: {generator_type}")
 
 
 def build_index(limit: int | None):
+    from .data.loader import load_wikipedia_simple
+    from .data.preprocessor import simple_chunk, clean_text
+    from .vectordb.chroma_client import ChromaIndexer
+    
     ds = load_wikipedia_simple(limit=limit)
     print(f"Loaded articles: {len(ds)}")
 
-    indexer = ChromaIndexer(settings.chroma_path, settings.collection_name)
+    indexer = ChromaIndexer(settings.chroma_path, settings.collection_name, settings.embedding_model)
     indexer.create_collection(recreate=True)
 
     total_chunks = 0
@@ -48,16 +48,22 @@ def build_index(limit: int | None):
 # Run RAG based chat
 # top_k - how many relevant chunks to retrieve for each query
 # generator_type - generator type - local/api provider (gpt2/gemini/groq)
-def run_chat(top_k: int = 3, generator_type: str | None = None):
+def run_chat(top_k: int | None = None, generator_type: str | None = None):
+    from .vectordb.chroma_client import ChromaIndexer
+    from .rag.pipeline import RAGPipeline
+    
     indexer = ChromaIndexer(settings.chroma_path, settings.collection_name)
     indexer.get_collection()
+    
+    actual_top_k = top_k or settings.top_k
     
     # Use provided generator or default from settings
     gen_type = generator_type or settings.generator_type
     generator = get_generator(gen_type)
-    print(f"Using generator: {gen_type}\n")
+    print(f"Using generator: {gen_type}")
+    print(f"Retrieval settings: top_k={actual_top_k}, max_distance={settings.max_distance}\n")
 
-    pipeline = RAGPipeline(indexer, generator, top_k=top_k)
+    pipeline = RAGPipeline(indexer, generator, top_k=actual_top_k)
 
     print("Type 'exit' to stop.\n")
     while True:
@@ -93,8 +99,8 @@ def main():
     parser.add_argument(
         "--top_k", 
         type=int, 
-        default=3,
-        help="Number of chunks to retrieve for each query (default: 3)"
+        default=None,
+        help=f"Number of chunks to retrieve for each query (default: {settings.top_k})"
     )
     parser.add_argument(
         "--generator",

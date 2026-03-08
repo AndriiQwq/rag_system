@@ -1,12 +1,16 @@
 from ..vectordb.chroma_client import ChromaIndexer
 from ..models.base import Generator
+from ..config.settings import settings
 
 
 class RAGPipeline:
-    def __init__(self, indexer: ChromaIndexer, generator: Generator, top_k: int = 3):
+    def __init__(self, indexer: ChromaIndexer, generator: Generator, top_k: int | None = None, 
+                 max_distance: float | None = None, context_chars: int | None = None):
         self.indexer = indexer
         self.generator = generator
-        self.top_k = top_k
+        self.top_k = top_k or settings.top_k
+        self.max_distance = max_distance or settings.max_distance
+        self.context_chars = context_chars or settings.context_chars_per_chunk
 
     def answer(self, query: str) -> tuple[str, list[str]]:
         # Search for relevant chunks in the vector database
@@ -17,13 +21,13 @@ class RAGPipeline:
         dists = res["distances"][0] # distances (similarity scores) for retrieved chunks
         
         # Retrieve only the relevant chunks based on distance threshold
-        # For cosine distance: lower is better. 1.2 is more permissive than 1.0
-        filtered_docs = [d for d, dist in zip(docs, dists) if dist <= 1.2]
+        # For cosine distance: lower is better (0=identical, higher=less similar)
+        filtered_docs = [d for d, dist in zip(docs, dists) if dist <= self.max_distance]
         if not filtered_docs:
             return "I don't know based on retrieved context.", []
         
-        # Take up to 3 chunks, 600 chars each = ~1800 chars context
-        context = "\n\n".join(d[:600] for d in filtered_docs[:3])
+        # Build context from filtered chunks
+        context = "\n\n".join(d[:self.context_chars] for d in filtered_docs)
         
         prompt = (
             "Use ONLY the context. If not enough info, say: I don't know.\n\n"
