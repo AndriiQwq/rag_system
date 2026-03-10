@@ -3,7 +3,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Settings:
     # Dataset settings
-    limit: int | None = 500
+    limit: int | None = None  # None for all articles (~241,787)
     
     # Chunking settings
     chunk_size: int = 1000

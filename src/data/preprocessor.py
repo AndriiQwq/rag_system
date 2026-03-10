@@ -1,8 +1,8 @@
 from typing import List
 
-def simple_chunk(text: str, chunk_size: int = 600, overlap: int = 100) -> List[str]:
+def simple_chunk(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
     """
-    Chanking function that splits text into fixed-size chunks with overlap.
+    Chunking function that splits text into fixed-size chunks with overlap.
     """
     text = (text or "").strip()
     if not text:
