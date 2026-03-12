@@ -4,9 +4,13 @@ from typing import Optional
 DEFAULT_SIMPLE_CONFIG = "20231101.simple"
 REPO_ID = "wikimedia/wikipedia"
 
-def load_wikipedia_simple(limit: Optional[int] = 1000, config: str = DEFAULT_SIMPLE_CONFIG):
+def load_wikipedia_simple(limit: Optional[int] = None, config: str = DEFAULT_SIMPLE_CONFIG):
     """
     Load Simple English Wikipedia.
+    
+    Args:
+        limit: Number of articles to load (None = all ~241,787 articles)
+        config: Wikipedia config version
     """
     ds = load_dataset(REPO_ID, config, split="train")
 
@@ -21,4 +25,3 @@ if __name__ == "__main__":
         print(f"Title: {item['title']}")
         print(f"Text: {item['text'][:200]}...")  # Print first 200 characters
         print("-" * 40)
-        

@@ -23,14 +23,28 @@ class GPT2Generator(Generator):
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=max_tokens,
-                do_sample=True, # Enable sampling for more diverse outputs
-                temperature=0.7, # Adjust for creativity
-                top_p=0.9, # Selecting from top x% of probability mass
-                repetition_penalty=1.2, # Penalize repetition
-                pad_token_id=self.tokenizer.eos_token_id
+                max_new_tokens=min(max_tokens, 50),  # Shorter answers
+                do_sample=True,
+                temperature=0.3,  # Very low = more deterministic
+                top_p=0.75,  # More restrictive
+                top_k=40,  # Limit vocabulary choices
+                # repetition_penalty=2.0,  # Strong penalty
+                no_repeat_ngram_size=3,
+                pad_token_id=self.tokenizer.eos_token_id,
+                eos_token_id=self.tokenizer.eos_token_id
             )
         
-        text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        answer = text.split("Answer:")[-1].strip()
+        # Decode only the generated part (without the prompt)
+        prompt_length = inputs["input_ids"].shape[1]
+        generated_ids = outputs[0][prompt_length:]
+        answer = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
+        
+        # Simple cleanup
+        if "\n\n" in answer:
+            answer = answer.split("\n\n")[0].strip()
+        
+        # If answer is empty, return fallback
+        if len(answer) < 5:
+            answer = "I don't have enough information to answer this question."
+        
         return answer
