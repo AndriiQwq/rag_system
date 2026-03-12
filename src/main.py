@@ -48,7 +48,8 @@ def build_index(limit: int | None):
 # Run RAG based chat
 # top_k - how many relevant chunks to retrieve for each query
 # generator_type - generator type - local/api provider (gpt2/gemini/groq)
-def run_chat(top_k: int | None = None, generator_type: str | None = None):
+def run_chat(top_k: int | None = None, generator_type: str | None = None, 
+             use_reranking: bool = False):
     from .vectordb.chroma_client import ChromaIndexer
     from .rag.pipeline import RAGPipeline
     
@@ -62,8 +63,13 @@ def run_chat(top_k: int | None = None, generator_type: str | None = None):
     generator = get_generator(gen_type)
     print(f"Using generator: {gen_type}")
     print(f"Retrieval settings: top_k={actual_top_k}, max_distance={settings.max_distance}\n")
+    if use_reranking:
+        print(f"reranking=enabled\n")
+    else:
+        print()
 
-    pipeline = RAGPipeline(indexer, generator, top_k=actual_top_k)
+    pipeline = RAGPipeline(indexer, generator, top_k=actual_top_k, 
+                          use_reranking=use_reranking)
 
     print("Type 'exit' to stop.\n")
     while True:
@@ -75,6 +81,7 @@ def run_chat(top_k: int | None = None, generator_type: str | None = None):
 
         answer, titles = pipeline.answer(query)
         print(f"\nAnswer: {answer}")
+        print(f"\n==========\n")
         print(f"Sources: {', '.join(dict.fromkeys(titles))}\n")
 
 
@@ -87,14 +94,14 @@ def main():
     parser.add_argument(
         "--mode", 
         choices=["index", "chat", "bench", "all"], 
-        default="chat",
+        default=None,
         help="Mode: index (build VectorDB), chat (interactive), bench (speed test), all (index+chat)"
     )
     parser.add_argument(
         "--limit", 
         type=int, 
-        default=settings.limit if settings.limit is not None else 1000,
-        help="Number of articles to index (default: 1000)"
+        default=settings.limit,
+        help=f"Number of articles to index (default: {'all articles' if settings.limit is None else settings.limit})"
     )
     parser.add_argument(
         "--top_k", 
@@ -114,7 +121,17 @@ def main():
         default=10, 
         help="Number of benchmark runs (default: 10)"
     )
+    parser.add_argument(
+        "--rerank",
+        action="store_true",
+        help="Enable CrossEncoder reranking for better relevance (slower but more accurate)"
+    )
     args = parser.parse_args()
+
+    # If no mode specified, show help
+    if args.mode is None:
+        parser.print_help()
+        return
 
     if args.mode in ("index", "all"):
         build_index(limit=args.limit)
@@ -123,7 +140,8 @@ def main():
         run_benchmark(top_k=args.top_k, generator_type=args.generator, runs=args.runs)
 
     if args.mode in ("chat", "all"):
-        run_chat(top_k=args.top_k, generator_type=args.generator)
+        run_chat(top_k=args.top_k, generator_type=args.generator, 
+                use_reranking=args.rerank)
 
 
 if __name__ == "__main__":
