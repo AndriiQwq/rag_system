@@ -12,6 +12,9 @@ class RAGPipeline:
         self.top_k = top_k or settings.top_k
         self.max_distance = max_distance or settings.max_distance
         self.context_chars = context_chars or settings.context_chars_per_chunk
+        self.small_to_big_enabled = settings.small_to_big_enabled
+        self.small_to_big_window = settings.small_to_big_window
+        self.lost_in_middle_mitigation = settings.lost_in_middle_mitigation
         
         # Advanced retrieval options
         self.use_reranking = use_reranking if use_reranking is not None else settings.use_reranking
@@ -54,22 +57,59 @@ class RAGPipeline:
         # Filter by distance threshold
         filtered_docs = []
         filtered_metas = []
+        filtered_dists = []
         for d, m, dist in zip(docs, metas, dists):
             if dist <= self.max_distance:
                 filtered_docs.append(d)
                 filtered_metas.append(m)
+            filtered_dists.append(dist)
         
         if not filtered_docs:
             return "I don't have enough information to answer this question.", []
         
+        items = list(zip(filtered_docs, filtered_metas, filtered_dists))
+
+        if self.lost_in_middle_mitigation:
+            items.sort(key=lambda x: x[2])
+
+        items = items[:self.top_k]
+
+        context_parts = []
+        used_ids = set()
+        for doc, meta, _ in items:
+            doc_id = meta.get("doc_id") if isinstance(meta, dict) else None
+            chunk_id = meta.get("chunk_id") if isinstance(meta, dict) else None
+
+            key = (doc_id, chunk_id)
+            if key in used_ids:
+                continue
+            used_ids.add(key)
+
+            if (
+                self.small_to_big_enabled
+                and isinstance(doc_id, int)
+                and isinstance(chunk_id, int)
+            ):
+                window_docs = self.indexer.get_chunk_window(
+                    doc_id=doc_id,
+                    chunk_id=chunk_id,
+                    window=self.small_to_big_window,
+                )
+                if window_docs:
+                    expanded = "\n".join(window_docs)
+                    context_parts.append(expanded[:self.context_chars])
+                    continue
+
+            context_parts.append(doc[:self.context_chars])
+
         # Build context and generate prompt from template
-        context = "\n\n".join(d[:self.context_chars] for d in filtered_docs)
+        context = "\n\n".join(context_parts)
         prompt = settings.prompt_template.format(context=context, query=query)
                 
         # Generate answer using the selected generator
-        answer = self.generator.generate(prompt, max_tokens=120)
+        answer = self.generator.generate(prompt, max_tokens=60)
         
         # Extract titles from metadata for sources
-        titles = [m.get("title", "unknown") for m in filtered_metas]
+        titles = [m.get("title", "unknown") for _, m, _ in items]
         
         return answer, titles
