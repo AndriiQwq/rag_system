@@ -1,14 +1,23 @@
 import argparse
+import shutil
+from pathlib import Path
 
 from .config.settings import settings
 from .cli.chat import run_chat
 from .benchmark.runner import run_benchmark
 
 
-def build_index(limit: int | None):
+def build_index(limit: int | None, wipe_db: bool = False):
     from .data.loader import load_wikipedia_simple
     from .data.preprocessor import clean_text, hybrid_chunk, simple_chunk
     from .vectordb.chroma_client import ChromaIndexer
+    from tqdm.auto import tqdm
+
+    if wipe_db:
+        db_path = Path(settings.chroma_path)
+        if db_path.exists():
+            shutil.rmtree(db_path)
+            print(f"Removed existing DB folder: {db_path}")
     
     ds = load_wikipedia_simple(limit=limit)
     print(f"Loaded articles: {len(ds)}")
@@ -17,7 +26,8 @@ def build_index(limit: int | None):
     indexer.create_collection(recreate=True)
 
     total_chunks = 0
-    for doc_id, item in enumerate(ds):
+    progress = tqdm(enumerate(ds), total=len(ds), desc="Indexing", unit="article")
+    for doc_id, item in progress:
         title = clean_text(item.get("title", ""))
         text = item.get("text", "")
 
@@ -36,6 +46,7 @@ def build_index(limit: int | None):
 
         indexer.add_chunks(doc_id, title, chunks)
         total_chunks += len(chunks)
+        progress.set_postfix(chunks=total_chunks)
 
     print(f"Done. Uploaded chunks: {total_chunks}")
     
@@ -79,6 +90,11 @@ def main():
         action="store_true",
         help="Enable CrossEncoder reranking for better relevance (slower but more accurate)"
     )
+    parser.add_argument(
+        "--wipe-db",
+        action="store_true",
+        help="Delete local Chroma DB folder before indexing (full clean rebuild)"
+    )
     args = parser.parse_args()
 
     # If no mode specified, show help
@@ -87,7 +103,7 @@ def main():
         return
 
     if args.mode in ("index", "all"):
-        build_index(limit=args.limit)
+        build_index(limit=args.limit, wipe_db=args.wipe_db)
 
     if args.mode == "bench":
         run_benchmark(top_k=args.top_k, generator_type=args.generator, runs=args.runs)

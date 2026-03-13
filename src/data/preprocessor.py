@@ -46,8 +46,6 @@ def _get_tokenizer(model_name: str = "gpt2"):
 def split_sentences(text: str) -> List[str]:
     """
     Split text into rough sentences.
-
-    This is intentionally lightweight and regex-based so indexing stays simple.
     """
     text = clean_text(text)
     if not text:
@@ -94,14 +92,6 @@ def hybrid_chunk(
 ) -> List[str]:
     """
     Chunk text by sentences while enforcing a token budget.
-
-    Strategy:
-    1. clean text
-    2. split into sentences
-    3. group neighboring sentences until the token budget is reached
-    4. keep a small sentence overlap between chunks
-
-    If a single sentence is longer than the token budget, it is split by tokens.
     """
     text = clean_text(text)
     if not text:
