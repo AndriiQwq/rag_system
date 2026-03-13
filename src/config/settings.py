@@ -10,9 +10,12 @@ class Settings:
     overlap: int = 200
     
     # Retrieval settings
-    top_k: int = 5
-    max_distance: float = 1.0
-    context_chars_per_chunk: int = 1000
+    top_k: int = 3
+    max_distance: float = 1.2
+    context_chars_per_chunk: int = 300  # GPT-2 max input = 512 tokens; 3 chunks × 300 chars fits safely
+    small_to_big_enabled: bool = True
+    small_to_big_window: int = 1
+    lost_in_middle_mitigation: bool = True
     
     # Additional retrieval settings
     use_reranking: bool = False  # Enable CrossEncoder reranking
@@ -26,15 +29,23 @@ class Settings:
     
     # Generator settings: "gpt2" | "gemini" | "groq"
     generator_type: str = "gpt2"
+
+    # GPT-2 generation parameters
+    gpt2_model_name: str = "gpt2"
+    gpt2_max_new_tokens: int = 30     # Short answers = faster inference
+    gpt2_do_sample: bool = True
+    gpt2_temperature: float = 0.2     # Near-deterministic = factual
+    gpt2_top_p: float = 0.9
+    gpt2_top_k: int | None = 50       # Limit vocabulary → more coherent text
+    gpt2_no_repeat_ngram_size: int = 3  # Prevent repetitive output
+    gpt2_max_input_length: int = 512  # GPT-2 hard context window limit
     
     # Prompt template for RAG
-    prompt_template: str = """Below is a context from Wikipedia and a question. Answer the question using ONLY the information from the context. Keep your answer short and factual.
+    # GPT-2 is a completion model, not instruction-following.
+    # Shorter and simpler prompts work better — the model continues after "Answer:"
+    prompt_template: str = """Context: {context}
 
-    Context:
-    {context}
-
-    Question: {query}
-
-    Answer:"""
+Question: {query}
+Answer:"""
 
 settings = Settings()
