@@ -7,7 +7,7 @@ from .benchmark.runner import run_benchmark
 
 def build_index(limit: int | None):
     from .data.loader import load_wikipedia_simple
-    from .data.preprocessor import simple_chunk, clean_text
+    from .data.preprocessor import clean_text, hybrid_chunk, simple_chunk
     from .vectordb.chroma_client import ChromaIndexer
     
     ds = load_wikipedia_simple(limit=limit)
@@ -21,7 +21,16 @@ def build_index(limit: int | None):
         title = clean_text(item.get("title", ""))
         text = item.get("text", "")
 
-        chunks = simple_chunk(text, chunk_size=settings.chunk_size, overlap=settings.overlap)
+        if settings.chunking_strategy == "hybrid":
+            chunks = hybrid_chunk(
+                text,
+                max_tokens=settings.chunk_max_tokens,
+                overlap_sentences=settings.chunk_overlap_sentences,
+                tokenizer_name=settings.chunk_tokenizer_name,
+                long_sentence_overlap_tokens=settings.long_sentence_overlap_tokens,
+            )
+        else:
+            chunks = simple_chunk(text, chunk_size=settings.chunk_size, overlap=settings.overlap)
         if not chunks:
             continue
 
@@ -29,6 +38,7 @@ def build_index(limit: int | None):
         total_chunks += len(chunks)
 
     print(f"Done. Uploaded chunks: {total_chunks}")
+    
 def main():
     parser = argparse.ArgumentParser(
         description="RAG System with Wikipedia SimpleEnglish dataset",

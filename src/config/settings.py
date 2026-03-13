@@ -6,8 +6,13 @@ class Settings:
     limit: int | None = None  # None for all articles (~241,787)
     
     # Chunking settings
-    chunk_size: int = 1000
-    overlap: int = 200
+    chunking_strategy: str = "hybrid"  # "hybrid" | "simple"
+    chunk_size: int = 1000  # used by simple chunking
+    overlap: int = 200  # used by simple chunking
+    chunk_max_tokens: int = 180
+    chunk_overlap_sentences: int = 1
+    chunk_tokenizer_name: str = "gpt2"
+    long_sentence_overlap_tokens: int = 20
     
     # Retrieval settings
     top_k: int = 3
