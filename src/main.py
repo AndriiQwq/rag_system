@@ -22,11 +22,36 @@ def build_index(limit: int | None, wipe_db: bool = False):
     ds = load_wikipedia_simple(limit=limit)
     print(f"Loaded articles: {len(ds)}")
 
+    print("Chunking strategy:", settings.chunking_strategy)
+    if settings.chunking_strategy == "hybrid":
+        print(
+            "Chunking params:",
+            {
+                "max_tokens": settings.chunk_max_tokens,
+                "overlap_sentences": settings.chunk_overlap_sentences,
+                "tokenizer": settings.chunk_tokenizer_name,
+                "long_sentence_overlap_tokens": settings.long_sentence_overlap_tokens,
+            },
+        )
+    else:
+        print(
+            "Chunking params:",
+            {
+                "chunk_size": settings.chunk_size,
+                "overlap": settings.overlap,
+            },
+        )
+
     indexer = ChromaIndexer(settings.chroma_path, settings.collection_name, settings.embedding_model)
     indexer.create_collection(recreate=True)
 
     total_chunks = 0
-    progress = tqdm(enumerate(ds), total=len(ds), desc="Indexing", unit="article")
+    progress = tqdm(
+        enumerate(ds),
+        total=len(ds),
+        desc=f"Indexing [{settings.chunking_strategy}]",
+        unit="article",
+    )
     for doc_id, item in progress:
         title = clean_text(item.get("title", ""))
         text = item.get("text", "")
@@ -106,7 +131,11 @@ def main():
         build_index(limit=args.limit, wipe_db=args.wipe_db)
 
     if args.mode == "bench":
-        run_benchmark(top_k=args.top_k, generator_type=args.generator, runs=args.runs)
+        run_benchmark(
+            top_k=args.top_k,
+            generator_type=args.generator,
+            runs_per_query=args.runs,
+        )
 
     if args.mode in ("chat", "all"):
         run_chat(top_k=args.top_k, generator_type=args.generator, 
