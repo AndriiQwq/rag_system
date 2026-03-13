@@ -32,3 +32,23 @@ class ChromaIndexer:
     def search(self, query: str, top_k: int = 3) -> Dict[str, Any]:
         qvec = self.embedder.encode([query], normalize_embeddings=True)[0].tolist()
         return self.collection.query(query_embeddings=[qvec], n_results=top_k)
+
+    def get_chunk_window(self, doc_id: int, chunk_id: int, window: int = 1) -> List[str]:
+        if self.collection is None:
+            self.get_collection()
+
+        start_chunk = max(0, chunk_id - window)
+        end_chunk = chunk_id + window
+        ids = [f"{doc_id}_{i}" for i in range(start_chunk, end_chunk + 1)]
+
+        res = self.collection.get(ids=ids, include=["documents", "metadatas"])
+        docs = res.get("documents", [])
+        metas = res.get("metadatas", [])
+
+        pairs = []
+        for doc, meta in zip(docs, metas):
+            current_chunk_id = meta.get("chunk_id", 10**9) if isinstance(meta, dict) else 10**9
+            pairs.append((current_chunk_id, doc))
+
+        pairs.sort(key=lambda x: x[0])
+        return [doc for _, doc in pairs]
