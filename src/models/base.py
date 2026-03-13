@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 class Generator(ABC):
     """Base class for all text generators"""
     

@@ -7,10 +7,6 @@ REPO_ID = "wikimedia/wikipedia"
 def load_wikipedia_simple(limit: Optional[int] = None, config: str = DEFAULT_SIMPLE_CONFIG):
     """
     Load Simple English Wikipedia.
-    
-    Args:
-        limit: Number of articles to load (None = all ~241,787 articles)
-        config: Wikipedia config version
     """
     ds = load_dataset(REPO_ID, config, split="train")
 
