@@ -55,14 +55,31 @@ They can be used for automatic answer-quality evaluation of GPT-2 outputs.
 Because this task is focused on GPT-2, the following generation parameters were selected:
 
 ```python
-gpt2_max_new_tokens: int = 30
-gpt2_do_sample: bool = False
-gpt2_temperature: float = 0.2
-gpt2_top_p: float = 0.9
-gpt2_top_k: int | None = 50
+gpt2_max_new_tokens: int = 20
+gpt2_do_sample: bool = True
+gpt2_temperature: float = 0.6
+gpt2_top_p: float = 0.8
+gpt2_top_k: int | None = 40
 gpt2_no_repeat_ngram_size: int = 3
 gpt2_max_input_length: int = 512
 ```
+
+It is also important to tune the model decoding parameters, because they directly affect answer quality:
+
+- `gpt2_max_new_tokens`
+- `gpt2_do_sample`
+- `gpt2_temperature`
+- `gpt2_top_p` & `gpt2_top_k`
+- `gpt2_no_repeat_ngram_size`
+
+Tuning of GPT-2 generation parameters was conducted, and the best found setup for this project is:
+
+- `gpt2_max_new_tokens = 20`
+- `gpt2_do_sample = True`
+- `gpt2_temperature = 0.6`
+- `gpt2_top_p = 0.8`
+- `gpt2_top_k = 40`
+- `gpt2_no_repeat_ngram_size = 3`
 
 Prompt is also important. Since GPT-2 is an older small model, a short and simple prompt works better:
 
