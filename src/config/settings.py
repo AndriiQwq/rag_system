@@ -17,12 +17,12 @@ class Settings:
     # Retrieval settings
     top_k: int = 3
     max_distance: float = 1.2
-    context_chars_per_chunk: int = 300  # GPT-2 max input = 512 tokens; 3 chunks × 300 chars 
+    context_chars_per_chunk: int = 500
     small_to_big_enabled: bool = False
     small_to_big_window: int = 1
     
     # Additional retrieval settings
-    use_reranking: bool = False  # Enable CrossEncoder reranking
+    use_reranking: bool = True
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     rerank_top_k: int = 3  # Number of documents after reranking
     
@@ -36,7 +36,7 @@ class Settings:
 
     # GPT-2 generation parameters
     gpt2_model_name: str = "gpt2"
-    gpt2_max_new_tokens: int = 50     # Short answers = faster inference
+    gpt2_max_new_tokens: int = 30
     # gpt2_do_sample: bool = True
     gpt2_do_sample: bool = False  # Disable sampling for more deterministic output
     gpt2_temperature: float = 0.2     # Near-deterministic = factual

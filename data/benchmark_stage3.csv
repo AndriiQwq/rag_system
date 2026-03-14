@@ -1,0 +1,7 @@
+config_id,label,max_new_tokens,do_sample,small_to_big,rerank,top_k,max_distance,context_chars,queries,runs_per_query,avg_total_ms,avg_answer_len,empty_answer_rate,avg_judge_score
+g1,"max_new_tokens=20, do_sample=False",20,False,False,True,3,1.2,500,10,1,499.59,78.2,0.0,2.5
+g2,"max_new_tokens=20, do_sample=True",20,True,False,True,3,1.2,500,10,1,494.73,80.4,0.0,2.8
+g3,"max_new_tokens=30, do_sample=False",30,False,False,True,3,1.2,500,10,1,658.27,125.1,0.0,3.3
+g4,"max_new_tokens=30, do_sample=True",30,True,False,True,3,1.2,500,10,1,726.4,124.9,0.0,1.2
+g5,"max_new_tokens=50, do_sample=False",50,False,False,True,3,1.2,500,10,1,1047.16,203.3,0.0,2.0
+g6,"max_new_tokens=50, do_sample=True",50,True,False,True,3,1.2,500,10,1,1140.14,214.3,0.0,1.8

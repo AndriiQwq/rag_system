@@ -1,0 +1,5 @@
+config_id,small_to_big,rerank,queries,runs_per_query,avg_total_ms,avg_answer_len,empty_answer_rate,avg_judge_score
+1,False,False,10,3,1014.16,199.5,0.0,2.5
+2,False,True,10,3,1048.83,203.6,0.0,2.7
+3,True,False,10,3,1029.18,187.6,0.0,2.6
+4,True,True,10,3,1055.64,210.4,0.0,2.7

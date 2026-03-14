@@ -1,0 +1,19 @@
+config_id,phase,label,small_to_big,rerank,top_k,max_distance,context_chars,queries,runs_per_query,avg_total_ms,avg_answer_len,empty_answer_rate,avg_judge_score
+w1-A1,top_k,winner1 | s2b=False rr=True | top_k=2 dist=1.2 ctx=300,False,True,2,1.2,300,10,1,1329.98,204.2,0.0,1.5
+w1-A2,top_k,winner1 | s2b=False rr=True | top_k=3 dist=1.2 ctx=300,False,True,3,1.2,300,10,1,1102.65,203.6,0.0,1.8
+w1-A3,top_k,winner1 | s2b=False rr=True | top_k=5 dist=1.2 ctx=300,False,True,5,1.2,300,10,1,1335.8,203.6,0.0,1.8
+w1-B4,max_distance,winner1 | s2b=False rr=True | top_k=3 dist=1.0 ctx=300,False,True,3,1.0,300,10,1,1340.97,203.6,0.0,1.8
+w1-B5,max_distance,winner1 | s2b=False rr=True | top_k=3 dist=1.2 ctx=300,False,True,3,1.2,300,10,1,1280.47,203.6,0.0,1.8
+w1-B6,max_distance,winner1 | s2b=False rr=True | top_k=3 dist=1.5 ctx=300,False,True,3,1.5,300,10,1,1269.69,203.6,0.0,1.8
+w1-C7,context_chars,winner1 | s2b=False rr=True | top_k=3 dist=1.2 ctx=200,False,True,3,1.2,200,10,1,1203.67,160.5,0.0,2.0
+w1-C8,context_chars,winner1 | s2b=False rr=True | top_k=3 dist=1.2 ctx=300,False,True,3,1.2,300,10,1,1264.6,203.6,0.0,2.6
+w1-C9,context_chars,winner1 | s2b=False rr=True | top_k=3 dist=1.2 ctx=500,False,True,3,1.2,500,10,1,1224.88,203.3,0.0,2.6
+w2-A10,top_k,winner2 | s2b=True rr=True | top_k=2 dist=1.2 ctx=300,True,True,2,1.2,300,10,1,1295.08,204.2,0.0,1.9
+w2-A11,top_k,winner2 | s2b=True rr=True | top_k=3 dist=1.2 ctx=300,True,True,3,1.2,300,10,1,1226.54,210.4,0.0,2.2
+w2-A12,top_k,winner2 | s2b=True rr=True | top_k=5 dist=1.2 ctx=300,True,True,5,1.2,300,10,1,1305.84,210.4,0.0,2.2
+w2-B13,max_distance,winner2 | s2b=True rr=True | top_k=3 dist=1.0 ctx=300,True,True,3,1.0,300,10,1,1076.21,210.4,0.0,1.2
+w2-B14,max_distance,winner2 | s2b=True rr=True | top_k=3 dist=1.2 ctx=300,True,True,3,1.2,300,10,1,1111.39,210.4,0.0,1.2
+w2-B15,max_distance,winner2 | s2b=True rr=True | top_k=3 dist=1.5 ctx=300,True,True,3,1.5,300,10,1,1061.84,210.4,0.0,1.2
+w2-C16,context_chars,winner2 | s2b=True rr=True | top_k=3 dist=1.2 ctx=200,True,True,3,1.2,200,10,1,1079.41,163.9,0.0,1.8
+w2-C17,context_chars,winner2 | s2b=True rr=True | top_k=3 dist=1.2 ctx=300,True,True,3,1.2,300,10,1,1369.99,210.4,0.0,1.2
+w2-C18,context_chars,winner2 | s2b=True rr=True | top_k=3 dist=1.2 ctx=500,True,True,3,1.2,500,10,1,1313.92,212.3,0.0,1.7
