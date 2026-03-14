@@ -107,8 +107,8 @@ def main():
     parser.add_argument(
         "--runs", 
         type=int, 
-        default=10, 
-        help="Number of benchmark runs (default: 10)"
+        default=3, 
+        help="Number of benchmark runs per query (default: 3)"
     )
     parser.add_argument(
         "--rerank",

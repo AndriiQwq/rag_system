@@ -2,33 +2,27 @@ import time
 from pathlib import Path
 from ..config.settings import settings
 
-DEFAULT_RUNS_PER_QUERY = 10
+DEFAULT_RUNS_PER_QUERY = 3
 QUESTIONS_FILE = Path("data/benchmark_questions.txt")
 
 def get_test_queries() -> list[str]:
-    """Load benchmark questions."""
-    if QUESTIONS_FILE.exists():
-        lines = [line.strip() for line in QUESTIONS_FILE.read_text(encoding="utf-8").splitlines() if line.strip()]
-        if lines:
-            return lines
-    else:
+    """Load benchmark questions from file."""
+    if not QUESTIONS_FILE.exists():
         raise FileNotFoundError(f"Questions file not found: {QUESTIONS_FILE}")
+    lines = [line.strip() for line in QUESTIONS_FILE.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if not lines:
+        raise ValueError(f"Questions file is empty: {QUESTIONS_FILE}")
+    return lines
 
-def _build_context(indexer, query: str, top_k: int) -> tuple[str, float]:
-    """Perfrom retrieval part and return retrieved context with retrieval time in ms."""
-    t0 = time.perf_counter()
-    res = indexer.search(query, top_k=top_k)
-    docs = res["documents"][0]
-    dists = res["distances"][0]
-    filtered_docs = [d for d, dist in zip(docs, dists) if dist <= settings.max_distance]
 
-    if filtered_docs:
-        context = "\n\n".join(d[:settings.context_chars_per_chunk] for d in filtered_docs[:top_k])
-    else:
-        context = ""
-
-    retrieval_time_ms = (time.perf_counter() - t0) * 1000
-    return context, retrieval_time_ms
+def _is_empty_answer(answer: str) -> bool:
+    text = (answer or "").strip().lower()
+    if not text:
+        return True
+    return (
+        "i don't have enough information" in text
+        or "i don't know" in text
+    )
 
 
 def run_benchmark(
@@ -36,9 +30,10 @@ def run_benchmark(
     generator_type: str | None = None,
     runs_per_query: int = DEFAULT_RUNS_PER_QUERY,
 ):
-    """Benchmark retrieval and generation speed."""
+    """Benchmark full RAG pipeline latency (same path as chat mode)."""
     from ..vectordb.chroma_client import ChromaIndexer
     from ..models.factory import get_generator
+    from ..rag.pipeline import RAGPipeline
 
     indexer = ChromaIndexer(settings.chroma_path, settings.collection_name)
     indexer.get_collection()
@@ -47,10 +42,18 @@ def run_benchmark(
     gen_type = generator_type or settings.generator_type
     generator = get_generator(gen_type)
     test_queries = get_test_queries()
+    pipeline = RAGPipeline(
+        indexer=indexer,
+        generator=generator,
+        top_k=actual_top_k,
+        max_distance=settings.max_distance,
+        context_chars=settings.context_chars_per_chunk,
+        use_reranking=settings.use_reranking,
+    )
 
-    retrieval_times = []
-    generation_times = []
     total_times = []
+    answer_lengths = []
+    empty_answers = 0
 
     print(f"Using generator: {gen_type}")
     print(f"Questions: {len(test_queries)}")
@@ -58,8 +61,7 @@ def run_benchmark(
     print()
 
     # One lightweight warmup (not measured)
-    warmup_prompt = ("Say: I don't know.")
-    _ = generator.generate(warmup_prompt, max_tokens=10)
+    _ = pipeline.answer(".")
 
     print("Warmup done.\n")
 
@@ -71,50 +73,38 @@ def run_benchmark(
             run_idx += 1
 
             t0 = time.perf_counter()
-            context, retrieval_time = _build_context(indexer, query, actual_top_k)
+            answer, _sources = pipeline.answer(query)
             t1 = time.perf_counter()
+            total_time = (t1 - t0) * 1000  # ms
 
-            if context:
-                prompt = (
-                    "Use ONLY the context. If not enough info, say: I don't know.\n\n"
-                    f"Context:\n{context}\n\n"
-                    f"Question: {query}\n"
-                    "Answer:"
-                )
-                _ = generator.generate(prompt, max_tokens=60)
-
-            t2 = time.perf_counter()
-            generation_time = (t2 - t1) * 1000  # ms
-            total_time = (t2 - t0) * 1000  # ms
-
-            retrieval_times.append(retrieval_time)
-            generation_times.append(generation_time)
+            answer_len = len((answer or "").strip())
+            answer_lengths.append(answer_len)
+            if _is_empty_answer(answer):
+                empty_answers += 1
             total_times.append(total_time)
 
             print(
-                f"Run {run_idx}/{total_runs} | query='{query[:45]}': "
-                f"retrieval={retrieval_time:.2f}ms, generation={generation_time:.2f}ms, total={total_time:.2f}ms"
+                f"Run {run_idx}/{total_runs} | query='{query[:45]}' | "
+                f"total={total_time:.2f}ms | answer_len={answer_len}"
             )
 
-    stats_retrieval = retrieval_times
-    stats_generation = generation_times
     stats_total = total_times
 
-    avg_retrieval = sum(stats_retrieval) / len(stats_retrieval)
-    avg_generation = sum(stats_generation) / len(stats_generation)
     avg_total = sum(stats_total) / len(stats_total)
+    avg_answer_len = sum(answer_lengths) / len(answer_lengths)
+    empty_rate = empty_answers / len(stats_total)
 
     print("\n" + "=" * 70)
     print("BENCHMARK RESULTS")
     print("=" * 70)
     print(f"Generator: {gen_type}")
-    print("Questions file: data/benchmark_questions.txt (or built-in defaults)")
-    print("Warmup: 1 pass")
+    print("Questions file: data/benchmark_questions.txt")
     print(f"Total Measured Runs: {len(stats_total)}")
     print(f"Top-k: {actual_top_k}")
     print(f"Max distance: {settings.max_distance}")
+    print(f"Reranking: {settings.use_reranking}")
     print("-" * 70)
-    print(f"Avg Retrieval Time:  {avg_retrieval:.2f} ms")
-    print(f"Avg Generation Time: {avg_generation:.2f} ms")
     print(f"Avg Total Time:      {avg_total:.2f} ms")
+    print(f"Avg Answer Length:   {avg_answer_len:.2f} chars")
+    print(f"Empty Answer Rate:   {empty_rate:.2%}")
     print("=" * 70)
