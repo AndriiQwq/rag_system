@@ -3,16 +3,14 @@
 ```bash
 kaggle datasets download -d ffatty/plain-text-wikipedia-simpleenglish -p data --unzip
 
-python -m venv .env
+python -m venv .venv
 
-.env\Scripts\activate
+.venv\Scripts\activate
 # or 
-source .env/bin/activate
+source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
-
-
 
 ---
 
@@ -112,7 +110,7 @@ Base setup:
 - Queries used: 10
 - Generator: gpt2
 - Runs per query: 3
-- Base params: top_k=3, max_distance=1.2, context_chars=300
+- Base params: top_k=3, max_distance=1.2, context_chars=500
 
 Stage 2 tuning was done with:
 
@@ -153,3 +151,5 @@ gpt2_do_sample: bool = False
 ```
 
 Benchmark outputs are stored in data/ directory. The quality of the GPT-2-generated text was evaluated using an LLM.
+After tuning, answer quality improved, but GPT-2 still makes factual and reasoning errors in some cases.
+This is expected and related to the model capacity/quality level of GPT-2.
