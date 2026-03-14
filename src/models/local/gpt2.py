@@ -16,6 +16,7 @@ class GPT2Generator(Generator):
     ):
         model_name = settings.gpt2_model_name
         self.tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+        self.tokenizer.truncation_side = "left"
         self.model = GPT2LMHeadModel.from_pretrained(model_name)
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
@@ -50,7 +51,7 @@ class GPT2Generator(Generator):
 
         generate_kwargs = dict(
             **inputs,
-            max_new_tokens=min(max_tokens, max_new_tokens),
+            max_new_tokens=max_new_tokens,
             do_sample=do_sample,
             no_repeat_ngram_size=no_repeat_ngram_size,
             pad_token_id=self.tokenizer.eos_token_id,

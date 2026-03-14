@@ -36,8 +36,8 @@ class Settings:
 
     # GPT-2 generation parameters
     gpt2_model_name: str = "gpt2"
-    gpt2_max_new_tokens: int = 20
     gpt2_do_sample: bool = True 
+    gpt2_max_new_tokens: int = 40
     gpt2_temperature: float = 0.6
     gpt2_top_p: float = 0.8
     gpt2_top_k: int | None = 40
