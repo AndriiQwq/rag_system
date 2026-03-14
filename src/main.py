@@ -78,13 +78,13 @@ def build_index(limit: int | None, wipe_db: bool = False):
 def main():
     parser = argparse.ArgumentParser(
         description="RAG System with Wikipedia SimpleEnglish dataset",
-        epilog="Example: python -m src.main --mode chat --generator groq --top_k 5"
+        epilog="Example: python -m src.main --mode chat --generator gpt2"
     )
     parser.add_argument(
         "--mode", 
-        choices=["index", "chat", "bench", "all"], 
+        choices=["index", "chat", "bench"], 
         default=None,
-        help="Mode: index (build VectorDB), chat (interactive), bench (speed test), all (index+chat)"
+        help="Mode: index (build VectorDB), chat (interactive Q&A), bench (benchmark latency+quality)"
     )
     parser.add_argument(
         "--limit", 
@@ -127,7 +127,7 @@ def main():
         parser.print_help()
         return
 
-    if args.mode in ("index", "all"):
+    if args.mode == "index":
         build_index(limit=args.limit, wipe_db=args.wipe_db)
 
     if args.mode == "bench":
@@ -137,8 +137,8 @@ def main():
             runs_per_query=args.runs,
         )
 
-    if args.mode in ("chat", "all"):
-        run_chat(top_k=args.top_k, generator_type=args.generator, 
+    if args.mode == "chat":
+        run_chat(top_k=args.top_k, generator_type=args.generator,
                 use_reranking=args.rerank)
 
 
