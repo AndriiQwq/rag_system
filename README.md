@@ -1,8 +1,6 @@
 # How to start
 
 ```bash
-kaggle datasets download -d ffatty/plain-text-wikipedia-simpleenglish -p data --unzip
-
 python -m venv .venv
 
 .venv\Scripts\activate
@@ -10,6 +8,8 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
+
+kaggle datasets download -d ffatty/plain-text-wikipedia-simpleenglish -p data --unzip
 ```
 
 ---
