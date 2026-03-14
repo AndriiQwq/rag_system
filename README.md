@@ -1,0 +1,155 @@
+# How to start
+
+```bash
+kaggle datasets download -d ffatty/plain-text-wikipedia-simpleenglish -p data --unzip
+
+python -m venv .env
+
+.env\Scripts\activate
+# or 
+source .env/bin/activate
+
+pip install -r requirements.txt
+```
+
+
+
+---
+
+## Overview
+
+The documents from Wikipedia were indexed and split into chunks.
+To build better chunks, a token-based sentence-aware method was used to keep information coherent inside each chunk and keep chunk size suitable for the model.
+
+Tests on the full document set showed the following results.
+
+GPT-2 is a relatively weak model, so it is important to choose parameters carefully to get stable output quality.
+The model input limit is 512 tokens.
+
+## Retrieval
+
+Retrieval settings used:
+
+```python
+top_k: int = 3
+max_distance: float = 1.2
+context_chars_per_chunk: int = 500
+small_to_big_enabled: bool = False
+use_reranking: bool = True
+small_to_big_window: int = 1
+rerank_top_k: int = 3
+```
+
+CrossEncoder reranking was also used with:
+
+- cross-encoder/ms-marco-MiniLM-L-6-v2
+
+The vector database is local ChromaDB, with embeddings model:
+
+- BAAI/bge-large-en-v1.5
+
+
+For experiments, Gemini and Groq API models were also tested.
+They can be used for automatic answer-quality evaluation of GPT-2 outputs.
+
+## GPT-2 settings
+
+Because this task is focused on GPT-2, the following generation parameters were selected:
+
+```python
+gpt2_max_new_tokens: int = 30
+gpt2_do_sample: bool = False
+gpt2_temperature: float = 0.2
+gpt2_top_p: float = 0.9
+gpt2_top_k: int | None = 50
+gpt2_no_repeat_ngram_size: int = 3
+gpt2_max_input_length: int = 512
+```
+
+Prompt is also important. Since GPT-2 is an older small model, a short and simple prompt works better:
+
+```python
+prompt_template: str = """Context: {context}
+
+Question: {query}
+Answer:"""
+```
+
+## CLI usage
+
+The project can be run as a standard CLI application.
+
+Options:
+
+```text
+-h, --help            show this help message and exit
+--mode {index,chat,bench}
+                      Mode: index (build VectorDB), chat (interactive Q&A),
+                      bench (benchmark latency+quality)
+--limit LIMIT         Number of articles to index (default: all articles)
+--top_k TOP_K         Number of chunks to retrieve for each query (default: 3)
+--generator {gpt2,gemini,groq}
+                      Generator: gpt2 (local), gemini (API), groq (API)
+--runs RUNS           Number of benchmark runs (default: 3)
+--rerank              Enable CrossEncoder reranking (slower but potentially more accurate)
+--wipe-db             Delete local Chroma DB folder before indexing (full clean rebuild)
+```
+
+Example:
+
+```bash
+python -m src.main --mode chat
+```
+
+## Benchmark summary
+
+Stage 1 benchmark on 4 combinations showed the best results with:
+
+- `rerank = True` (similar quality with and without `small_to_big`)
+
+Base setup:
+
+- Queries used: 10
+- Generator: gpt2
+- Runs per query: 3
+- Base params: top_k=3, max_distance=1.2, context_chars=300
+
+Stage 2 tuning was done with:
+
+- top_k: 2 / 3 / 5
+- max_distance: 1.0 / 1.2 / 1.5
+- context_chars: 200 / 300 / 500
+
+Best Stage 2 rows:
+
+```text
+config_id,phase,label,small_to_big,rerank,top_k,max_distance,context_chars,queries,runs_per_query,avg_total_ms,avg_answer_len,empty_answer_rate,avg_judge_score
+w1-C8 ... s2b=False rr=True top_k=3 dist=1.2 ctx=300 ... avg_total_ms=1264.6 ... avg_judge_score=2.6
+w1-C9 ... s2b=False rr=True top_k=3 dist=1.2 ctx=500 ... avg_total_ms=1224.88 ... avg_judge_score=2.6
+```
+
+Best Stage 3 rows:
+
+```text
+config_id,label,max_new_tokens,do_sample,small_to_big,rerank,top_k,max_distance,context_chars,queries,runs_per_query,avg_total_ms,avg_answer_len,empty_answer_rate,avg_judge_score
+g1,"max_new_tokens=20, do_sample=False",20,False,False,True,3,1.2,500,10,1,499.59,78.2,0.0,2.5
+g2,"max_new_tokens=20, do_sample=True",20,True,False,True,3,1.2,500,10,1,494.73,80.4,0.0,2.8
+g3,"max_new_tokens=30, do_sample=False",30,False,False,True,3,1.2,500,10,1,658.27,125.1,0.0,3.3
+```
+
+Final selected config (best quality/speed balance):
+
+```python
+# Retrieval
+top_k: int = 3
+max_distance: float = 1.2
+context_chars_per_chunk: int = 500
+small_to_big_enabled: bool = False
+use_reranking: bool = True
+
+# Generation
+gpt2_max_new_tokens: int = 30
+gpt2_do_sample: bool = False
+```
+
+Benchmark outputs are stored in data/ directory. The quality of the GPT-2-generated text was evaluated using an LLM.
