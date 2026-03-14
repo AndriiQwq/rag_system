@@ -20,7 +20,6 @@ class Settings:
     context_chars_per_chunk: int = 300  # GPT-2 max input = 512 tokens; 3 chunks × 300 chars 
     small_to_big_enabled: bool = False
     small_to_big_window: int = 1
-    lost_in_middle_mitigation: bool = True
     
     # Additional retrieval settings
     use_reranking: bool = False  # Enable CrossEncoder reranking

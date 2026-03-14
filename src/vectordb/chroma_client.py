@@ -34,6 +34,7 @@ class ChromaIndexer:
         return self.collection.query(query_embeddings=[qvec], n_results=top_k)
 
     def get_chunk_window(self, doc_id: int, chunk_id: int, window: int = 1) -> List[str]:
+        """Returns neighboring chunks around the selected chunk."""
         if self.collection is None:
             self.get_collection()
 

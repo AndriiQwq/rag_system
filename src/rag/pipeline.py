@@ -14,7 +14,6 @@ class RAGPipeline:
         self.context_chars = context_chars or settings.context_chars_per_chunk
         self.small_to_big_enabled = settings.small_to_big_enabled
         self.small_to_big_window = settings.small_to_big_window
-        self.lost_in_middle_mitigation = settings.lost_in_middle_mitigation
         
         # Advanced retrieval options
         self.use_reranking = use_reranking if use_reranking is not None else settings.use_reranking
@@ -62,15 +61,12 @@ class RAGPipeline:
             if dist <= self.max_distance:
                 filtered_docs.append(d)
                 filtered_metas.append(m)
-            filtered_dists.append(dist)
+                filtered_dists.append(dist)
         
         if not filtered_docs:
             return "I don't have enough information to answer this question.", []
         
         items = list(zip(filtered_docs, filtered_metas, filtered_dists))
-
-        if self.lost_in_middle_mitigation:
-            items.sort(key=lambda x: x[2])
 
         items = items[:self.top_k]
 
