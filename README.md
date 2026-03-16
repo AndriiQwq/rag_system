@@ -29,13 +29,13 @@ The model input limit is 512 tokens.
 Retrieval settings used:
 
 ```python
-top_k: int = 3
-max_distance: float = 1.2
-context_chars_per_chunk: int = 500
+top_k: int = 4
+max_distance: float = 1.3
+context_chars_per_chunk: int = 700
 small_to_big_enabled: bool = False
 use_reranking: bool = True
 small_to_big_window: int = 1
-rerank_top_k: int = 3
+rerank_top_k: int = 4
 ```
 
 CrossEncoder reranking was also used with:
@@ -56,11 +56,11 @@ Because this task is focused on GPT-2, the following generation parameters were 
 
 ```python
 gpt2_max_new_tokens: int = 20
-gpt2_do_sample: bool = True
+gpt2_do_sample: bool = False
 gpt2_temperature: float = 0.6
 gpt2_top_p: float = 0.8
 gpt2_top_k: int | None = 40
-gpt2_no_repeat_ngram_size: int = 3
+gpt2_no_repeat_ngram_size: int = 4
 gpt2_max_input_length: int = 512
 ```
 
@@ -75,13 +75,13 @@ It is also important to tune the model decoding parameters, because they directl
 Tuning of GPT-2 generation parameters was conducted, and the best found setup for this project is:
 
 - `gpt2_max_new_tokens = 20`
-- `gpt2_do_sample = True`
+- `gpt2_do_sample = False`
 - `gpt2_temperature = 0.6`
 - `gpt2_top_p = 0.8`
 - `gpt2_top_k = 40`
-- `gpt2_no_repeat_ngram_size = 3`
+- `gpt2_no_repeat_ngram_size = 4`
 
-Prompt is also important. Since GPT-2 is an older small model, a short and simple prompt works better:
+Prompt is also important. In the latest comparison, a simpler prompt showed better quality.
 
 ```python
 prompt_template: str = """Context: {context}
@@ -152,7 +152,7 @@ g2,"max_new_tokens=20, do_sample=True",20,True,False,True,3,1.2,500,10,1,494.73,
 g3,"max_new_tokens=30, do_sample=False",30,False,False,True,3,1.2,500,10,1,658.27,125.1,0.0,3.3
 ```
 
-Final selected config (best quality/speed balance):
+Final selected config for Stage 3 (best quality/speed balance):
 
 ```python
 # Retrieval
@@ -170,3 +170,15 @@ gpt2_do_sample: bool = False
 Benchmark outputs are stored in data/ directory. The quality of the GPT-2-generated text was evaluated using an LLM.
 After tuning, answer quality improved, but GPT-2 still makes factual and reasoning errors in some cases.
 This is expected and related to the model capacity/quality level of GPT-2.
+
+### Timing benchmark
+
+Benchmarks performed on `max_new_tokens` were run on 10 curated questions, 3 runs per query (30 total runs per config).
+
+| Config | max\_new\_tokens | do\_sample | Retrieval ms | Generation ms | Total ms | Score / 5 |
+|--------|-----------------|------------|-------------:|--------------:|---------:|----------:|
+| sp1    | **20**          | False      | 65           | 394           | **459**  | 1.00      |
+| sp2    | 30              | False      | 61           | 596           | 657      | 3.00      |
+| sp3    | 40              | False      | 61           | 778           | 838      | **4.25**  |
+
+Quality analysis was done with LLM-based scoring due to limited project time.
