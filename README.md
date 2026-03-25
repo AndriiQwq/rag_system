@@ -30,12 +30,12 @@ Retrieval settings used:
 
 ```python
 top_k: int = 4
-max_distance: float = 1.3
+max_distance: float = 1.0
 context_chars_per_chunk: int = 700
 small_to_big_enabled: bool = False
 use_reranking: bool = True
 small_to_big_window: int = 1
-rerank_top_k: int = 4
+rerank_top_k: int = 3
 ```
 
 CrossEncoder reranking was also used with:
@@ -157,14 +157,17 @@ Final selected config for Stage 3 (best quality/speed balance):
 ```python
 # Retrieval
 top_k: int = 3
-max_distance: float = 1.2
+max_distance: float = 0.75
 context_chars_per_chunk: int = 500
 small_to_big_enabled: bool = False
 use_reranking: bool = True
 
 # Generation
-gpt2_max_new_tokens: int = 30
+gpt2_max_new_tokens: int = 40
 gpt2_do_sample: bool = False
+gpt2_temperature: float = 0.6
+gpt2_top_p: float = 0.8
+gpt2_no_repeat_ngram_size: int = None
 ```
 
 Benchmark outputs are stored in data/ directory. The quality of the GPT-2-generated text was evaluated using an LLM.
@@ -175,10 +178,10 @@ This is expected and related to the model capacity/quality level of GPT-2.
 
 Benchmarks performed on `max_new_tokens` were run on 10 curated questions, 3 runs per query (30 total runs per config).
 
-| Config | max\_new\_tokens | do\_sample | Retrieval ms | Generation ms | Total ms | Score / 5 |
-|--------|-----------------|------------|-------------:|--------------:|---------:|----------:|
-| sp1    | **20**          | False      | 65           | 394           | **459**  | 1.00      |
-| sp2    | 30              | False      | 61           | 596           | 657      | 3.00      |
-| sp3    | 40              | False      | 61           | 778           | 838      | **4.25**  |
+| Config | max_new_tokens | do_sample | Retrieval ms | Generation ms | Total ms | Score / 5 |
+|--------|---------------|-----------|-------------:|--------------:|---------:|----------:|
+| sp1    | **20**        | False     | 73           | 500           | **573**  | 3.22      |
+| sp2    | 30            | False     | 83           | 600           | 683      | 4.00      |
+| sp3    | 40            | False     | 101          | 800           | 901      | **5.00**  |
 
 Quality analysis was done with LLM-based scoring due to limited project time.
