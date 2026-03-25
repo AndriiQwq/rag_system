@@ -66,7 +66,8 @@ def build_index(limit: int | None, wipe_db: bool = False):
             )
         else:
             chunks = simple_chunk(text, chunk_size=settings.chunk_size, overlap=settings.overlap)
-        if not chunks:
+        
+        if not chunks: # For ex. empty articles
             continue
 
         indexer.add_chunks(doc_id, title, chunks)

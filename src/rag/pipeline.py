@@ -103,7 +103,7 @@ class RAGPipeline:
         prompt = settings.prompt_template.format(context=context, query=query)
                 
         # Generate answer using the selected generator
-        answer = self.generator.generate(prompt, max_tokens=60)
+        answer = self.generator.generate(prompt)
         
         # Extract titles from metadata for sources
         titles = [m.get("title", "unknown") for _, m, _ in items]

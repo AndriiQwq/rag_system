@@ -1,0 +1,4 @@
+config_id,label,generation_max_new_tokens,generation_do_sample,generation_temperature,generation_top_p,generation_top_k,generation_no_repeat_ngram_size,retrieval_small_to_big,retrieval_rerank,retrieval_top_k,retrieval_max_distance,retrieval_context_chars,queries,runs_per_query,avg_total_ms,avg_answer_len,empty_answer_rate,avg_judge_score
+sp1,speed-first | max_new_tokens=20 | do_sample=False | temp=0.6 | top_p=0.8 | top_k=None | no_repeat=None,20,False,0.6,0.8,,,False,True,3,0.75,500,10,3,573.11,86.4,0.0,3.222
+sp2,speed-first | max_new_tokens=30 | do_sample=False | temp=0.6 | top_p=0.8 | top_k=None | no_repeat=None,30,False,0.6,0.8,,,False,True,3,0.75,500,10,3,683.21,133.8,0.0,4.0
+sp3,speed-first | max_new_tokens=40 | do_sample=False | temp=0.6 | top_p=0.8 | top_k=None | no_repeat=None,40,False,0.6,0.8,,,False,True,3,0.75,500,10,3,901.24,182.7,0.0,5.0

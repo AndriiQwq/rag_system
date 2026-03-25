@@ -4,9 +4,9 @@ def get_generator(generator_type: str):
         from .local.gpt2 import GPT2Generator
         return GPT2Generator()
     if generator_type == "gemini":
-        from .api.gemini import GeminiGenerator
+        from .api.gemini_generator import GeminiGenerator
         return GeminiGenerator()
     if generator_type == "groq":
-        from .api.groq import GroqGenerator
+        from .api.groq_generator import GroqGenerator
         return GroqGenerator()
     raise ValueError(f"Unknown generator type: {generator_type}")

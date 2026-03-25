@@ -3,7 +3,7 @@ from pathlib import Path
 from ..config.settings import settings
 
 DEFAULT_RUNS_PER_QUERY = 3
-QUESTIONS_FILE = Path("data/benchmark_questions.txt")
+QUESTIONS_FILE = Path("data/benchmark/benchmark_questions.txt")
 
 def get_test_queries() -> list[str]:
     """Load benchmark questions from file."""

@@ -1,4 +1,0 @@
-config_id,max_new_tokens,do_sample,temperature,top_p,top_k_gen,no_repeat,top_k_retrieval,max_distance,context_chars,rerank,small_to_big,queries,runs_per_query,avg_retrieval_ms,avg_generation_ms,avg_total_ms,empty_answer_rate,avg_judge_score
-sp1,20,False,0.6,0.8,40,4,4,1.3,700,True,False,10,3,65.05,393.98,459.03,0.0,1.0
-sp2,30,False,0.6,0.8,40,4,4,1.3,700,True,False,10,3,60.94,596.04,656.98,0.0,3.0
-sp3,40,False,0.6,0.8,40,4,4,1.3,700,True,False,10,3,60.49,777.74,838.23,0.0,4.25
